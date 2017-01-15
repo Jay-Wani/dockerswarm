@@ -12,12 +12,12 @@
 #  limitations under the License.
 
 imports:
-- path: templates/deployment.jinja
+- path: templates/deploy.jinja
 - path: templates/manager.jinja
 - path: templates/worker.jinja
 resources:
 - name: swarm-cluster
-  type: templates/deployment.jinja
+  type: templates/deploy.jinja
   properties:
 
     #Cluster Config
