@@ -1,54 +1,88 @@
-# google-cloud-swarm
-Scripts to create and manage a Docker Swarm cluster on Google Cloud Platform.
-### Prerequisites
-- [Docker 1.12](https://docs.docker.com/engine/installation/)
-- [Docker-Machine 0.8.0](https://docs.docker.com/machine/install-machine/)
-- [Google Cloud SDK](http://cloud.google.com/sdk)
+# dockerswarm
+ 
+In this project we would be using docker swarm kit to orchestrate containers & run an app in a overlay network with automatic service discovery.
+ 
+Docker 1.12 comes wihh an inbuilt orchestration engine and we would be using this feature to run a basic voting app created in python & using redis as a backend database to store the number of hits to that page. 
+ 
+The count would be stored in the variable 'totalhits' in redis.
 
-### Before you start
-Make sure you create a [Google Cloud Project](http://console.cloud.google.com/project)
 
-Login: 
+# Getting Started - Installation
 
-`gcloud init`
+We have to start by installing Docker and Docker Compose on your machine. 
 
-### Create a Cluster
-   `./swarm-up.sh`
-   
-   By default, this will create a cluster with one manager and two workers. You can edit this and more options in the [options.yaml](options.yaml) file.
-### Delete a Cluster
-   `./swarm-down.sh`
+Install Docker :            [Docker](https://docs.docker.com/installation/) and 
+Install Docker Compose :    [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Resize a Cluster
-   `./swarm-resize.sh <NUM_WORKERS>`
+After installing Docker and Docker Compose we would now get stated by cloning this project onto our docker host machine. 
 
-### Options
-Edit the [options.yaml](options.yaml) file to specify your options.
 
-## Cluster Config
+# Cloning Git Repository
 
-- Cluster Configuration Options
-  - `prefix` = All nodes in the Swarm will start with this Prefix. This allows you to have multiple Swarms in the same project.
-  - `zone` = [Google Cloud Zone](https://cloud.google.com/compute/docs/regions-zones/regions-zones) for the nodes - *default: us-central1-f*
-- Manager Options
-    - `manager_machine_type` = [Google Cloud Machine Type](https://cloud.google.com/compute/docs/machine-types#standard_machine_types) for the Manager nodes - *default: n1-standard-1*
-    - `manager_disk` = Disk size in GB for the Manager nodes - *default: 100*
-- Worker Options
-  - `num` = Number of Workers for the Cluster - *default: 2*
-  - `worker_machine_type` = [Google Cloud Machine Type](https://cloud.google.com/compute/docs/machine-types#standard_machine_types) for the Worker nodes - *default: n1-standard-1*
-  - `worker_disk` = Disk size in GB for the Worker nodes - *default: 100*
+In order to get started be sure to clone this project onto your Docker Host. Create a directory on your host. Please note that the demo webservices will inherit the name from the directory you create. If you create a folder named test. Then the services will all be named test-web, test-redis, test-lb. Also, when you scale your services it will then tack on a number to the end of the service you scale.
+ 
+git clone https://github.com/Jay-Wani/dockercompose-sampleapp.git
+ 
+ 
+# Analyze the Docker Compose file 
+ 
+We will be using the below `docker-compose.yml` file to build the ecosystem. 
+ 
+```yaml
 
-## How it works
+version: '2'
+services:
+   python-app:
+     build: .
+     ports:
+      - "5000:5000"
+     volumes:
+      - .:/code
+     depends_on:
+      - redis
+   redis:
+     image: redis
+```
+ 
+The yaml files are highly dependent on the spaces for formatting and running the commands, please ensure that the spaces in your file are exactly as shown in the example above.  
+ 
+Version : This tells us about the version of docker-compose that we are using. 
 
-These scripts are simple wrappers around a set of Deployment Manager templates.
+Services : This denotes the configuration of the service that we are building. 
+            Step 1 : We build the python-app from the Dockerfile placed in the current working directory where we are working.
+            Step 2 : We map the port no 5000 on the localhost to the port 5000 on the container.
+            Step 3 : We map our current working directory to the /code folder on the container
+            Step 4 : We configure the container to talk to the redis container
+ 
+ redis : We setup the redis container from the redis image
+ 
+ 
+# Analyze the Dockerfile 
+ 
+We will use this Dockerfile to build the image of webservices app container. 
 
-It launches a VM for the Swarm Manager, and a Managed Instance Group for the workers.
+```yaml
+ ADD . /sampleapp
+ WORKDIR /sampleapp
+ RUN apk-install python \
+     python-dev \
+     py-pip &&\
+     pip install -r requirements.txt
+ CMD ["python", "app.py"]
+```
 
-This allows you to dynamically scale the number of workers as well as easily create Network Load Balancers that target the worker nodes.
+ 
+# Compose Commands for bringing up the app.
+ 
+```yaml
+ docker-compose up -d
+```
+ 
+# Command for building your own image from Dockerfile
+ 
+```yaml
+ docker build -t sampleapp .
+```
+ 
 
-Docker-Machine is used to connect to the Manager node over a secure TLS connection
-
-##### Notes:
-- This is not an official Google product
-- This is not an official Docker product
-- Only tested on OSX
+ 
