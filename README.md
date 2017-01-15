@@ -1,99 +1,54 @@
-# dockerswarm
+# google-cloud-swarm
+Scripts to create and manage a Docker Swarm cluster on Google Cloud Platform.
+### Prerequisites
+- [Docker 1.12](https://docs.docker.com/engine/installation/)
+- [Docker-Machine 0.8.0](https://docs.docker.com/machine/install-machine/)
+- [Google Cloud SDK](http://cloud.google.com/sdk)
 
-In this project we would be using docker swarm kit to orchestrate containers & run an app in a overlay network with automatic service discovery.
+### Before you start
+Make sure you create a [Google Cloud Project](http://console.cloud.google.com/project)
 
-Docker 1.12 comes wihh an inbuilt orchestration engine and we would be using this feature to run a basic website hits app created in python & using redis as a backend database to store the number of hits to that page.
+Login: 
 
-The count would be stored in the variable 'totalhits' in redis.
+`gcloud init`
 
+### Create a Cluster
+   `./swarm-up.sh`
+   
+   By default, this will create a cluster with one manager and two workers. You can edit this and more options in the [options.yaml](options.yaml) file.
+### Delete a Cluster
+   `./swarm-down.sh`
 
-# Getting Started - Installation
+### Resize a Cluster
+   `./swarm-resize.sh <NUM_WORKERS>`
 
-We have to start by installing Docker 1.12 on your machine.
+### Options
+Edit the [options.yaml](options.yaml) file to specify your options.
 
-Install Docker :            [Docker](https://docs.docker.com/installation/) and
+## Cluster Config
 
+- Cluster Configuration Options
+  - `prefix` = All nodes in the Swarm will start with this Prefix. This allows you to have multiple Swarms in the same project.
+  - `zone` = [Google Cloud Zone](https://cloud.google.com/compute/docs/regions-zones/regions-zones) for the nodes - *default: us-central1-f*
+- Manager Options
+    - `manager_machine_type` = [Google Cloud Machine Type](https://cloud.google.com/compute/docs/machine-types#standard_machine_types) for the Manager nodes - *default: n1-standard-1*
+    - `manager_disk` = Disk size in GB for the Manager nodes - *default: 100*
+- Worker Options
+  - `num` = Number of Workers for the Cluster - *default: 2*
+  - `worker_machine_type` = [Google Cloud Machine Type](https://cloud.google.com/compute/docs/machine-types#standard_machine_types) for the Worker nodes - *default: n1-standard-1*
+  - `worker_disk` = Disk size in GB for the Worker nodes - *default: 100*
 
-After installing Docker you would then need to clone this project onto our docker host machine, using the "git clone" command.
+## How it works
 
+These scripts are simple wrappers around a set of Deployment Manager templates.
 
-# Cloning Git Repository
+It launches a VM for the Swarm Manager, and a Managed Instance Group for the workers.
 
-In order to get started be sure to clone this project onto your Docker Host. Create a directory on your host.
-Please note that the demo webservices will inherit the name from the directory you create. If you create a folder named test. Then the services will all be named test-web, test-redis, test-lb. Also, when you scale your services it will then tack on a number to the end of the service you scale.
+This allows you to dynamically scale the number of workers as well as easily create Network Load Balancers that target the worker nodes.
 
-git clone https://github.com/Jay-Wani/dockerswarm.git
+Docker-Machine is used to connect to the Manager node over a secure TLS connection
 
-
-
-# Analyze the Dockerfile
-
-We will use this Dockerfile to build the image of webservices app container that we would use with the docker orchestrator.
-
-```yaml
-ADD . /sampleapp
-WORKDIR /sampleapp
-RUN apk-install python \
-    python-dev \
-    py-pip &&\
-    pip install -r requirements.txt
-CMD ["python", "app.py"]
-```
-
-The Dockerfile is used to build Docker images.
-
-
-
-# Build the docker image from the Dockerfile.
-
-```yaml
-docker build -t pythonapp .
-```
-
-This command needs to be run in the folder in which you cloned the Git reposiroty.
-It would take a while to run and once finished an image named ```pythonapp``` would be created.
-
-We will use the ```docker images``` command to check that this images has been created.
-
-
-
-# Docker 1.12 - Orchestration using docker swarm
-
-SwarmKit is a toolkit for orchestrating distributed systems at any scale. It includes primitives for node discovery, raft-based consensus, task scheduling and more.
-
-Its main benefits are:
-
-    Distributed: SwarmKit uses the Raft Consensus Algorithm in order to coordinate and does not rely on a single point of failure to perform decisions.
-    Secure: Node communication and membership within a Swarm are secure out of the box by using TLS.
-    Simple: SwarmKit is operationally simple and minimizes infrastructure dependencies. It does not need an external database to operate.
-
-
-# Create a Docker Swarm - Cluster with 3 manager nodes and 4 worker nodes.
-
-Create 7 VM's that you would be using for this docker lab. Ideally these can be easily created on any cloud platform.
-
-Run the following command on the first machine,
-
-```yaml
-docker swarm init
-```
-
-This command would produce the below result.
-
-
-
-
-# STEP 1 : Creating an overlay network for the app & the backend redis database
-
-Create an overlay network for our docker containers to run in. Docker 1.12 come with automatic service dicsovery.
-As a result the different containers should be able to locate each other if these contrainers are on the same overlay network.
-
-```yaml
-docker network create --driver overlay my-network
-```
-
-
-# STEP 2 : Creating a docker service for redis database.
-
-Create an overlay network for our docker containers to run in. Docker 1.12 come with automatic service dicsovery.
-As a result the different containers should be able to locate each other if these contrainers are on the same overlay network.
+##### Notes:
+- This is not an official Google product
+- This is not an official Docker product
+- Only tested on OSX
