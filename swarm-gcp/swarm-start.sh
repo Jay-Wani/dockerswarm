@@ -12,13 +12,13 @@
 #  limitations under the License.
 
 # get cluster info from options.yaml
-PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
-ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
+PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' config.yaml)
+ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' config.yaml)
 PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
 
 echo "Creating Swarm"
 
-gcloud deployment-manager deployments create $PREFIX-swarm-cluster --config options.yaml
+gcloud deployment-manager deployments create $PREFIX-swarm-cluster --config config.yaml
 
 echo "Installing Docker"
 
